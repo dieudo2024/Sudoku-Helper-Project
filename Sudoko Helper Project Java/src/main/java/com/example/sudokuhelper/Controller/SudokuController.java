@@ -1,22 +1,34 @@
-package com.example.sudokuhelper1;
+package com.example.sudokuhelper.Controller;
 
+/**
+ * JavaFX controller for the Sudoku UI.
+ * <p>Handles user interactions (button clicks, import, analyze, solve) and
+ * delegates game logic to {@link com.example.sudokuhelper.Model.SudokuModel}.
+ */
+
+import com.example.sudokuhelper.Model.SudokuModel;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.scene.control.Tooltip;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Scanner;
 
 public class SudokuController {
+
+    private final SudokuModel model = new SudokuModel();
 
     @FXML
     private Button buttonOne;
@@ -50,10 +62,9 @@ public class SudokuController {
     @FXML
     private GridPane gridPane;
 
-    private TextField[][] gridTextField = new TextField[9][9];
+    private final TextField[][] gridTextField = new TextField[9][9];
 
-    private int[][] currentGrid = new int[9][9];
-    private int[][] player = new int[9][9];
+    private final int[][] player = new int[9][9];
 
     private final int[][] solution = {
             { 7, 9, 2, 3, 5, 1, 8, 6, 4 },
@@ -68,7 +79,10 @@ public class SudokuController {
     };
 
     private TextField selectedTextField = null;
-    // Method to assign values from the TextField grid to the player array
+    /**
+     * Reads the current values from the TextField grid into the internal player array
+     * and synchronizes the model's player grid.
+     */
     private void updatePlayerArray() {
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
@@ -85,8 +99,33 @@ public class SudokuController {
                 }
             }
         }
+        // keep model in sync
+        model.setPlayerGrid(player);
+    }
+
+    /** Highlights the row, column and 3x3 box for the selected cell. */
+    private void highlightRelatedCells(int selRow, int selCol) {
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                TextField tf = gridTextField[r][c];
+                // skip the selected cell itself (it has its own class)
+                if (r == selRow && c == selCol) continue;
+                boolean sameRow = (r == selRow);
+                boolean sameCol = (c == selCol);
+                boolean sameBox = ((r / 3) == (selRow / 3) && (c / 3) == (selCol / 3));
+                if (sameRow || sameCol || sameBox) {
+                    if (!tf.getStyleClass().contains("cell-highlight")) tf.getStyleClass().add("cell-highlight");
+                } else {
+                    tf.getStyleClass().remove("cell-highlight");
+                }
+            }
+        }
     }
     @FXML
+    /**
+     * JavaFX initialization hook. Builds the 9x9 TextField grid, attaches listeners
+     * and configures keyboard handling.
+     */
     private void initialize() {
 
         // Initialize the grid of TextFields
@@ -95,19 +134,22 @@ public class SudokuController {
                 TextField tf = new TextField();
                 tf.setPrefWidth(40);
                 tf.setPrefHeight(40);
-                tf.setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white;");
+                // Use CSS classes (sudoku.css) for styling
+                tf.getStyleClass().add("cell");
 
                 int finalRow = row;
                 int finalCol = col;
                 tf.setOnMouseClicked(e -> {
                     if (selectedTextField != null) {
-                        selectedTextField.setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: white;"); // Reset previous
-
+                        selectedTextField.getStyleClass().remove("cell-selected"); // Reset previous selected
                     }
                     selectedTextField = tf;
-                    selectedTextField.setStyle("-fx-font-size: 18; -fx-alignment: center; -fx-background-color: lightblue; -fx-border-color: blue; -fx-border-width: 2;"); // Highlight selected
+                    if (!selectedTextField.getStyleClass().contains("cell-selected"))
+                        selectedTextField.getStyleClass().add("cell-selected"); // Highlight selected
+                    // highlight row/column/box
+                    highlightRelatedCells(finalRow, finalCol);
                     tf.requestFocus();
-                    possibleValues = getPossibleValues(finalRow, finalCol);
+                    possibleValues = model.getPossibleValues(finalRow, finalCol);
                     enableDisableNumberButtons();
                     updatePlayerArray();
                 });
@@ -128,11 +170,21 @@ public class SudokuController {
                 });
 
                 gridTextField[row][col] = tf;
+                // add box border classes for 3x3 separation
+                if (row % 3 == 0) tf.getStyleClass().add("box-border-top");
+                if (row % 3 == 2) tf.getStyleClass().add("box-border-bottom");
+                if (col % 3 == 0) tf.getStyleClass().add("box-border-left");
+                if (col % 3 == 2) tf.getStyleClass().add("box-border-right");
                 gridPane.add(tf, col, row);
             }
         }
 
         gridPane.setFocusTraversable(true); // Make the gridPane focusable for key events
+        if (!gridPane.getStyleClass().contains("sudoku-grid")) gridPane.getStyleClass().add("sudoku-grid");
+
+        // Add style class to numeric buttons for CSS toggling
+        Button[] numButtons = {buttonOne, buttonTwo, buttonThree, buttonFour, buttonFive, buttonSix, buttonSeven, buttonEight, buttonNine};
+        for (Button b : numButtons) if (b != null && !b.getStyleClass().contains("num-button")) b.getStyleClass().add("num-button");
 
         // Handle key presses on the grid
         gridPane.setOnKeyPressed(event -> {
@@ -148,7 +200,7 @@ public class SudokuController {
         });
     }
 
-    // Helper method to fill the selected cell with a value
+    /** Helper method to fill the currently selected cell with {@code value}. */
     private void fillSelectedCell(int value) {
         if (selectedTextField != null && !selectedTextField.isDisabled()) {
             selectedTextField.setText(String.valueOf(value));
@@ -157,56 +209,56 @@ public class SudokuController {
         enableDisableNumberButtons();
     }
 
-    // Event handlers for number buttons
+    /** Inserts digit 1 into the selected cell. */
     public void onButtonOneClick(ActionEvent event) {
         fillSelectedCell(1);
     }
-
+    /** Inserts digit 2 into the selected cell. */
     public void handleButtonTwo(ActionEvent event) {
         fillSelectedCell(2);
     }
-
+    /** Inserts digit 3 into the selected cell. */
     public void handleButtonThree(ActionEvent event) {
         fillSelectedCell(3);
     }
-
+    /** Inserts digit 4 into the selected cell. */
     public void handleButtonFour(ActionEvent event) {
         fillSelectedCell(4);
     }
-
+    /** Inserts digit 5 into the selected cell. */
     public void handleButtonFive(ActionEvent event) {
         fillSelectedCell(5);
     }
-
+    /** Inserts digit 6 into the selected cell. */
     public void handleButtonSix(ActionEvent event) {
         fillSelectedCell(6);
     }
-
+    /** Inserts digit 7 into the selected cell. */
     public void handleButtonSeven(ActionEvent event) {
         fillSelectedCell(7);
     }
-
+    /** Inserts digit 8 into the selected cell. */
     public void handleButtonEight(ActionEvent event) {
         fillSelectedCell(8);
     }
-
+    /** Inserts digit 9 into the selected cell. */
     public void handleButtonNine(ActionEvent event) {
         fillSelectedCell(9);
     }
-
+    /** Erases the currently selected cell. */
     public void onHandleEraseButtonClick(ActionEvent event) {
         handleErase();
     }
-
+    /** Trigger the solver for the current puzzle. */
     public void onHandleSolveButton(ActionEvent event) {
         handleSolve();
     }
-
+    /** Show candidate values as tooltips for empty cells. */
     public void onHandleAnalyzeButton(ActionEvent event) {
         handleAnalyze();
     }
 
-    // Import Sudoku grid from a file
+    /** Opens a file chooser and imports a Sudoku puzzle from a selected file. */
     public void onHandleImportButton(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Import Sudoku Grid");
@@ -217,8 +269,23 @@ public class SudokuController {
         File selectedFile = fileChooser.showOpenDialog(stage);
 
         if (selectedFile != null) {
-            HandleImport(selectedFile);
-            DisplayGrid();
+            try {
+                boolean ok = model.importFromFile(selectedFile);
+                if (ok) DisplayGrid();
+                else {
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Import Error");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Failed to import puzzle from file.");
+                    alert.showAndWait();
+                }
+            } catch (IOException e) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Import Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Error reading the file: " + e.getMessage());
+                alert.showAndWait();
+            }
         } else {
             Alert alert = new Alert(AlertType.WARNING);
             alert.setTitle("Import Canceled");
@@ -228,11 +295,12 @@ public class SudokuController {
         }
     }
 
+    /** Validates the current player entries against the expected solution. */
     public void onHandleCheckSolutionButton(ActionEvent event) {
         handleCheckSolution();
     }
 
-    // Erase the selected cell
+    /** Clears the selected cell and updates model state. */
     private void handleErase() {
         if (selectedTextField != null && !selectedTextField.isDisabled()) {
             selectedTextField.clear();
@@ -241,18 +309,42 @@ public class SudokuController {
         enableDisableNumberButtons();
     }
 
-    // Solve the Sudoku puzzle
+    /** Attempts to solve the current puzzle using the model's solver. */
     private void handleSolve() {
+        // Parse current UI into player array
+        updatePlayerArray();
+
+        int[][] board = new int[9][9];
+        for (int r = 0; r < 9; r++) {
+            System.arraycopy(player[r], 0, board[r], 0, 9);
+        }
+
+        // keep model in sync and use it to solve
+        model.setPlayerGrid(board);
+        boolean solved = model.solve();
+        if (!solved) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("No Solution");
+            alert.setHeaderText(null);
+            alert.setContentText("No solution could be found for the current puzzle.");
+            alert.showAndWait();
+            return;
+        }
+
+        // Display solved board
+        int[][] solvedBoard = model.getPlayerGrid();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
-                gridTextField[row][col].setText(String.valueOf(solution[row][col]));
-                gridTextField[row][col].setDisable(true);
-                gridTextField[row][col].setStyle("-fx-background-color: lightgreen; -fx-font-size: 18; -fx-alignment: center;");
+                gridTextField[row][col].setText(String.valueOf(solvedBoard[row][col]));
+                TextField tf = gridTextField[row][col];
+                tf.setDisable(true);
+                tf.getStyleClass().removeAll("cell", "cell-given", "cell-selected");
+                if (!tf.getStyleClass().contains("cell-solved")) tf.getStyleClass().add("cell-solved");
             }
         }
     }
 
-    // Check the user's solution
+    /** Evaluates the player's solution and shows an alert with the result. */
     private void handleCheckSolution() {
         boolean solved = CheckSolution();
         Alert alert = new Alert(solved ? AlertType.INFORMATION : AlertType.ERROR);
@@ -265,18 +357,19 @@ public class SudokuController {
     //Set<Integer> possible;
     List<Integer> possibleValues = new ArrayList<>();
 
+    private int[][] currentGrid;
 
-    // Analyze the Sudoku grid for possible values
+
+    /** Adds tooltips with possible candidate values to empty editable cells. */
     private void handleAnalyze() {
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 if (gridTextField[row][col].isDisabled())
                     continue;
                 if (gridTextField[row][col].getText().trim().isEmpty()) {
-                    possibleValues = getPossibleValues(row, col).stream().map(Integer::intValue).toList();
-
-                    // Display possible values as a tooltip
-                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString((Set<Integer>)possibleValues)));
+                    // delegate possible-values to model
+                    possibleValues = model.getPossibleValues(row, col);
+                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString(possibleValues)));
                 } else {
                     gridTextField[row][col].setTooltip(null);
                 }
@@ -284,7 +377,7 @@ public class SudokuController {
         }
     }
 
-    // Method to enable or disable number buttons based on the possible candidates
+    /** Enables or disables the numeric entry buttons based on the current candidates. */
     private void enableDisableNumberButtons() {
         Button[] buttons = {buttonOne, buttonTwo, buttonThree, buttonFour, buttonFive, buttonSix, buttonSeven, buttonEight, buttonNine};
 
@@ -293,17 +386,22 @@ public class SudokuController {
             if (numberButton != null && possibleValues != null) {
                 if (possibleValues.contains(num + 1)) {
                     numberButton.setDisable(false);
-                    numberButton.setStyle("");  // Reset button style
+                        numberButton.getStyleClass().remove("invalid-number"); // Ensure valid button style
                 } else {
                     numberButton.setDisable(true);
-                    numberButton.setStyle("-fx-background-color: red;");  // Mark invalid numbers with red
+                        if (!numberButton.getStyleClass().contains("invalid-number")) {
+                            numberButton.getStyleClass().add("invalid-number"); // Add invalid style
+                        }
                 }
             }
         }
 
     }
 
-    // Get possible values for a cell
+    /**
+     * Returns the list of possible digits for the given cell using the controller's
+     * player grid. This mirrors the model's candidate logic for controller-side checks.
+     */
     private List<Integer> getPossibleValues(int i, int j) {
         boolean[] possible = new boolean[9];
         int[][] board = player;
@@ -339,10 +437,10 @@ public class SudokuController {
         return candidates;
     }
 
-    // Helper method to convert Set<Integer> to a comma-separated String for the tooltip
-    private String possibleToString(Set<Integer> set) {
+    // Helper method to convert a collection of Integers to a comma-separated String for the tooltip
+    private String possibleToString(Collection<Integer> col) {
         StringBuilder sb = new StringBuilder();
-        for (Integer i : set) {
+        for (Integer i : col) {
             sb.append(i).append(", ");
         }
         if (!sb.isEmpty()) {
@@ -355,15 +453,18 @@ public class SudokuController {
     public void DisplayGrid() {
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
-                int val = currentGrid[row][col];
+                int val = model.getCurrentGrid()[row][col];
+                TextField tf = gridTextField[row][col];
                 if (val != 0) {
-                    gridTextField[row][col].setText(String.valueOf(val));
-                    gridTextField[row][col].setDisable(true);
-                    gridTextField[row][col].setStyle("-fx-background-color: lightgray; -fx-font-size: 18; -fx-alignment: center;");
+                    tf.setText(String.valueOf(val));
+                    tf.setDisable(true);
+                    tf.getStyleClass().removeAll("cell", "cell-solved", "cell-selected");
+                    if (!tf.getStyleClass().contains("cell-given")) tf.getStyleClass().add("cell-given");
                 } else {
-                    gridTextField[row][col].setText("");
-                    gridTextField[row][col].setDisable(false);
-                    gridTextField[row][col].setStyle("-fx-background-color: white; -fx-font-size: 18; -fx-alignment: center;");
+                    tf.setText("");
+                    tf.setDisable(false);
+                    tf.getStyleClass().removeAll("cell-given", "cell-solved", "cell-selected");
+                    if (!tf.getStyleClass().contains("cell")) tf.getStyleClass().add("cell");
                 }
             }
         }
@@ -371,6 +472,7 @@ public class SudokuController {
 
     // Check if the user's solution is correct
     public boolean CheckSolution() {
+        // update player array from UI then delegate check to model
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 String text = gridTextField[row][col].getText().trim();
@@ -383,14 +485,8 @@ public class SudokuController {
                 }
             }
         }
-
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                if (player[row][col] != solution[row][col])
-                    return false;
-            }
-        }
-        return true;
+        model.setPlayerGrid(player);
+        return model.checkSolution(solution);
     }
 
     // Import a Sudoku grid from a file
@@ -398,7 +494,7 @@ public class SudokuController {
         if (file != null) { // Added null check here
             try (FileReader fileReader = new FileReader(file);
                  Scanner scanner = new Scanner(fileReader)) {
-                scanner.useDelimiter(",|\\s+"); // Use comma or whitespace as delimiter
+                scanner.useDelimiter(",|\s+"); // Use comma or whitespace as delimiter
 
                 for (int row = 0; row < 9; row++) {
                     for (int col = 0; col < 9; col++) {

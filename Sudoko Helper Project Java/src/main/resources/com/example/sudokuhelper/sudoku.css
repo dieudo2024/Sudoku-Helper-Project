@@ -1,0 +1,31 @@
+.sudoku-grid {
+    -fx-border-color: black;
+    -fx-border-width: 2px;
+}
+
+/* Individual cell styling (TextField cells) */
+.cell {
+    -fx-alignment: center;
+    -fx-font-size: 16px;
+}
+
+/* Selected and highlighted states */
+.cell-selected {
+    -fx-background-color: -fx-focus-color, -fx-control-inner-background;
+}
+.cell-highlight {
+    -fx-background-color: #f0f8ff; /* light highlight */
+}
+
+/* Given cells (imported puzzle) and solved cells */
+.cell-given {
+    -fx-font-weight: bold;
+    -fx-opacity: 0.9;
+}
+.cell-solved {
+    -fx-text-fill: green;
+}
+
+/* Numeric buttons styling */
+.num-button { -fx-font-size: 14px; }
+.invalid-number { -fx-opacity: 0.4; }
