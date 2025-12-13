@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="555.0" prefWidth="810.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.sudokuhelper1.SudokuController">
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="555.0" prefWidth="810.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.sudokuhelper.Controller.SudokuController">
     <children>
         <Button fx:id="buttonOne" layoutX="560.0" layoutY="101.0" mnemonicParsing="false" onAction="#onButtonOneClick" prefHeight="40.0" prefWidth="35.0" text="1" />
         <Button fx:id="buttonTwo" layoutX="608.0" layoutY="101.0" minHeight="40.0" minWidth="35.0" mnemonicParsing="false" onAction="#handleButtonTwo" text="2" />
@@ -41,9 +41,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints fx:id="initialize" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
-            <children>
 
-            </children>
         </GridPane>
 
         <Button fx:id="eraseButton" layoutX="93.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleEraseButtonClick" text="Erase" />
