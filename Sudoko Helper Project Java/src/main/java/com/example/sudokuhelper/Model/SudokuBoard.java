@@ -6,7 +6,9 @@ package com.example.sudokuhelper.Model;
  */
 public class SudokuBoard {
 
-    private final int[][] cells = new int[9][9];
+    private static final int SIZE = 9;
+
+    private final int[][] cells = new int[SIZE][SIZE];
 
     /** Constructs an empty board (all zeros). */
     public SudokuBoard() {}
@@ -15,7 +17,7 @@ public class SudokuBoard {
      * @param src source array
      */
     public SudokuBoard(int[][] src) {
-        for (int i = 0; i < 9; i++) System.arraycopy(src[i], 0, cells[i], 0, 9);
+        copyInto(src, cells);
     }
 
     /** Returns the value at the given cell (0 if empty).
@@ -41,13 +43,23 @@ public class SudokuBoard {
      * @return copy of the board
      */
     public int[][] toArray() {
-        int[][] copy = new int[9][9];
-        for (int i = 0; i < 9; i++) System.arraycopy(cells[i], 0, copy[i], 0, 9);
-        return copy;
+        return deepCopy(cells);
     }
 
     /** Returns a deep copy of this board. */
     public SudokuBoard copy() {
         return new SudokuBoard(toArray());
+    }
+
+    /** Creates a deep copy of the provided 9x9 grid. */
+    public static int[][] deepCopy(int[][] src) {
+        int[][] copy = new int[SIZE][SIZE];
+        copyInto(src, copy);
+        return copy;
+    }
+
+    /** Copies the content of {@code src} into {@code dest}. */
+    public static void copyInto(int[][] src, int[][] dest) {
+        for (int i = 0; i < SIZE; i++) System.arraycopy(src[i], 0, dest[i], 0, SIZE);
     }
 }

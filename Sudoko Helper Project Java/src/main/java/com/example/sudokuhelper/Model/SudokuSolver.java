@@ -56,19 +56,6 @@ public class SudokuSolver {
      * @return {@code true} if placing {@code num} does not violate Sudoku constraints
      */
     private static boolean isSafe(int[][] board, int row, int col, int num) {
-        // check row and column
-        for (int i = 0; i < 9; i++) {
-            if (board[row][i] == num) return false;
-            if (board[i][col] == num) return false;
-        }
-        // check 3x3 box
-        int boxRow = (row / 3) * 3;
-        int boxCol = (col / 3) * 3;
-        for (int r = boxRow; r < boxRow + 3; r++) {
-            for (int c = boxCol; c < boxCol + 3; c++) {
-                if (board[r][c] == num) return false;
-            }
-        }
-        return true;
+        return CandidateAnalyzer.analyze(board, row, col).contains(num);
     }
 }

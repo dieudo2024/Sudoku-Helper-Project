@@ -3,7 +3,6 @@ package com.example.sudokuhelper.Model;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -21,9 +20,7 @@ public class SudokuModel {
      * @return a 9x9 int matrix copy of the current grid
      */
     public int[][] getCurrentGrid() {
-        int[][] copy = new int[9][9];
-        for (int i = 0; i < 9; i++) System.arraycopy(currentGrid[i], 0, copy[i], 0, 9);
-        return copy;
+        return SudokuBoard.deepCopy(currentGrid);
     }
 
     /**
@@ -31,9 +28,7 @@ public class SudokuModel {
      * @return a 9x9 int matrix copy of the player grid
      */
     public int[][] getPlayerGrid() {
-        int[][] copy = new int[9][9];
-        for (int i = 0; i < 9; i++) System.arraycopy(player[i], 0, copy[i], 0, 9);
-        return copy;
+        return SudokuBoard.deepCopy(player);
     }
 
     /**
@@ -41,7 +36,7 @@ public class SudokuModel {
      * @param src 9x9 source matrix
      */
     public void setPlayerGrid(int[][] src) {
-        for (int i = 0; i < 9; i++) System.arraycopy(src[i], 0, player[i], 0, 9);
+        SudokuBoard.copyInto(src, player);
     }
 
     /**
@@ -49,7 +44,7 @@ public class SudokuModel {
      * @param src 9x9 source matrix
      */
     public void setCurrentGrid(int[][] src) {
-        for (int i = 0; i < 9; i++) System.arraycopy(src[i], 0, currentGrid[i], 0, 9);
+        SudokuBoard.copyInto(src, currentGrid);
     }
 
     /**
@@ -69,17 +64,7 @@ public class SudokuModel {
      * @return list of integers in range 1..9 that are valid candidates
      */
     public List<Integer> getPossibleValues(int row, int col) {
-        boolean[] used = new boolean[9];
-        for (int c = 0; c < 9; c++) if (player[row][c] != 0) used[player[row][c] - 1] = true;
-        for (int r = 0; r < 9; r++) if (player[r][col] != 0) used[player[r][col] - 1] = true;
-        int boxRow = (row / 3) * 3;
-        int boxCol = (col / 3) * 3;
-        for (int r = boxRow; r < boxRow + 3; r++)
-            for (int c = boxCol; c < boxCol + 3; c++)
-                if (player[r][c] != 0) used[player[r][c] - 1] = true;
-        List<Integer> candidates = new ArrayList<>();
-        for (int n = 0; n < 9; n++) if (!used[n]) candidates.add(n + 1);
-        return candidates;
+        return CandidateAnalyzer.analyze(player, row, col);
     }
 
     /**
