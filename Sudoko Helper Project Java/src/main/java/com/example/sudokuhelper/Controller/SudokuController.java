@@ -52,15 +52,7 @@ public class SudokuController {
     @FXML
     private Button buttonNine;
     @FXML
-    private Button eraseButton;
-    @FXML
-    private Button solveButton;
-    @FXML
-    private Button analyzeButton;
-    @FXML
     private Button importButton;
-    @FXML
-    private Button checkSolutionButton;
 
     @FXML
     private GridPane gridPane;
@@ -80,6 +72,21 @@ public class SudokuController {
             { 9, 6, 3, 1, 4, 8, 2, 7, 5 },
             { 8, 2, 4, 7, 3, 5, 9, 1, 6 }
     };
+
+    /**
+     * JavaFX initialization hook. Builds the 9x9 TextField grid, attaches listeners
+     * and configures keyboard handling.
+     */
+    @FXML
+    private void initialize() {
+        buildGrid();
+        configureGridPane();
+        styleNumberButtons();
+        DisplayGrid();
+        updatePlayerArray();
+        possibleValues.clear();
+        enableDisableNumberButtons();
+    }
 
     private TextField selectedTextField = null;
     /**
@@ -115,21 +122,6 @@ public class SudokuController {
                 }
             }
         }
-    }
-    
-    /**
-     * JavaFX initialization hook. Builds the 9x9 TextField grid, attaches listeners
-     * and configures keyboard handling.
-     */
-    @FXML
-    private void initialize() {
-        buildGrid();
-        configureGridPane();
-        styleNumberButtons();
-        DisplayGrid();
-        updatePlayerArray();
-        possibleValues.clear();
-        enableDisableNumberButtons();
     }
 
     private void buildGrid() {
@@ -271,11 +263,16 @@ public class SudokuController {
     @FXML
     public void onHandleEraseButtonClick(ActionEvent event) {
         handleErase();
+        possibleValues.clear();
+        enableDisableNumberButtons();
     }
     /** Trigger the solver for the current puzzle. */
     @FXML
     public void onHandleSolveButton(ActionEvent event) {
         handleSolve();
+        updatePlayerArray();
+        possibleValues.clear();
+        enableDisableNumberButtons();
     }
     /** Show candidate values as tooltips for empty cells. */
     @FXML
