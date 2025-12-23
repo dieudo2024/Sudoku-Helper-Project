@@ -10,8 +10,8 @@ import java.util.List;
  */
 public class SudokuModel {
 
-    private int[][] currentGrid = new int[9][9];
-    private int[][] player = new int[9][9];
+    private final int[][] currentGrid = new int[9][9];
+    private final int[][] player = new int[9][9];
 
     /**
      * Returns a defensive copy of the current grid (the given puzzle).
@@ -77,6 +77,22 @@ public class SudokuModel {
         setCurrentGrid(imported);
         setPlayerGrid(imported);
         return true;
+    }
+
+    /**
+     * Provides a snapshot of the player grid paired with given flags from the original puzzle.
+     * @return 9x9 array describing each cell's value and whether it is a fixed clue
+     */
+    public GridCell[][] getCells() {
+        GridCell[][] cells = new GridCell[9][9];
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                boolean given = currentGrid[r][c] != 0;
+                int value = given ? currentGrid[r][c] : player[r][c];
+                cells[r][c] = new GridCell(value, given);
+            }
+        }
+        return cells;
     }
 
 }

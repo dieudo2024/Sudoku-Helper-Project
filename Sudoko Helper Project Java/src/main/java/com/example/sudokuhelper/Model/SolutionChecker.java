@@ -1,8 +1,5 @@
 package com.example.sudokuhelper.Model;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Utility methods for validating and comparing Sudoku solutions.
  */
@@ -14,7 +11,7 @@ public class SolutionChecker {
      * @return {@code true} if complete
      */
     public static boolean isComplete(int[][] board) {
-        for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) if (board[r][c] < 1 || board[r][c] > 9) return false;
+        for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) if (isValidDigit(board[r][c])) return false;
         return true;
     }
 
@@ -24,30 +21,21 @@ public class SolutionChecker {
      * @return {@code true} when rows, columns and 3x3 boxes contain digits 1..9 exactly once
      */
     public static boolean isValidSolution(int[][] board) {
-        // check rows
-        for (int r = 0; r < 9; r++) {
-            Set<Integer> seen = new HashSet<>();
-            for (int c = 0; c < 9; c++) {
-                int v = board[r][c];
-                if (v < 1 || v > 9 || !seen.add(v)) return false;
-            }
-        }
-        // check cols
+        for (int r = 0; r < 9; r++) if (containsOneToNine(board[r])) return false;
+
+        int[] buffer = new int[9];
         for (int c = 0; c < 9; c++) {
-            Set<Integer> seen = new HashSet<>();
-            for (int r = 0; r < 9; r++) {
-                int v = board[r][c];
-                if (v < 1 || v > 9 || !seen.add(v)) return false;
-            }
+            for (int r = 0; r < 9; r++) buffer[r] = board[r][c];
+            if (containsOneToNine(buffer)) return false;
         }
-        // check boxes
-        for (int br = 0; br < 3; br++) for (int bc = 0; bc < 3; bc++) {
-            Set<Integer> seen = new HashSet<>();
-            for (int r = br * 3; r < br * 3 + 3; r++)
-                for (int c = bc * 3; c < bc * 3 + 3; c++) {
-                    int v = board[r][c];
-                    if (v < 1 || v > 9 || !seen.add(v)) return false;
-                }
+
+        for (int br = 0; br < 3; br++) {
+            for (int bc = 0; bc < 3; bc++) {
+                int idx = 0;
+                for (int r = br * 3; r < br * 3 + 3; r++)
+                    for (int c = bc * 3; c < bc * 3 + 3; c++) buffer[idx++] = board[r][c];
+                if (containsOneToNine(buffer)) return false;
+            }
         }
         return true;
     }
@@ -61,5 +49,18 @@ public class SolutionChecker {
     public static boolean equals(int[][] a, int[][] b) {
         for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) if (a[r][c] != b[r][c]) return false;
         return true;
+    }
+
+    private static boolean isValidDigit(int value) {
+        return value < 1 || value > 9;
+    }
+
+    private static boolean containsOneToNine(int[] values) {
+        boolean[] seen = new boolean[9];
+        for (int v : values) {
+            if (isValidDigit(v) || seen[v - 1]) return true;
+            seen[v - 1] = true;
+        }
+        return false;
     }
 }
