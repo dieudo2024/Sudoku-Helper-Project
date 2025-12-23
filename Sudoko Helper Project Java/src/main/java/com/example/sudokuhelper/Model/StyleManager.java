@@ -32,6 +32,10 @@ public class StyleManager {
     /** Highlights a TextField as currently selected. */
     public static void markSelected(TextField tf) {
         if (!tf.getStyleClass().contains("cell-selected")) tf.getStyleClass().add("cell-selected");
-        tf.setDisable(false);
+    }
+
+    /** Removes the selected highlight from a TextField. */
+    public static void clearSelection(TextField tf) {
+        tf.getStyleClass().remove("cell-selected");
     }
 }

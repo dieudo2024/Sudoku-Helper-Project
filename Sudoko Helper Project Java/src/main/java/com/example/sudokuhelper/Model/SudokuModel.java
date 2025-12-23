@@ -1,10 +1,8 @@
 package com.example.sudokuhelper.Model;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Model class that holds the current and player Sudoku grids and provides
@@ -75,42 +73,10 @@ public class SudokuModel {
      */
     public boolean importFromFile(File file) throws IOException {
         if (file == null) return false;
-        try (FileReader fr = new FileReader(file); Scanner scanner = new Scanner(fr)) {
-            scanner.useDelimiter(",|\\s+");
-            for (int row = 0; row < 9; row++) {
-                for (int col = 0; col < 9; col++) {
-                    if (scanner.hasNext()) {
-                        String value = scanner.next().trim();
-                        try {
-                            if (!value.isEmpty()) {
-                                int val = Integer.parseInt(value);
-                                currentGrid[row][col] = val;
-                                player[row][col] = val;
-                            } else {
-                                currentGrid[row][col] = 0;
-                                player[row][col] = 0;
-                            }
-                        } catch (NumberFormatException e) {
-                            currentGrid[row][col] = 0;
-                            player[row][col] = 0;
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-                if (scanner.hasNextLine()) scanner.nextLine();
-            }
-        }
+        int[][] imported = FileImporter.importFromFile(file);
+        setCurrentGrid(imported);
+        setPlayerGrid(imported);
         return true;
     }
 
-    /**
-     * Compares the player's grid to an expected solution.
-     * @param expected a 9x9 expected solution grid
-     * @return {@code true} if the player's entries match {@code expected}
-     */
-    public boolean checkSolution(int[][] expected) {
-        for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) if (player[r][c] != expected[r][c]) return false;
-        return true;
-    }
 }

@@ -6,7 +6,17 @@ package com.example.sudokuhelper.Controller;
  * delegates game logic to {@link com.example.sudokuhelper.Model.SudokuModel}.
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import com.example.sudokuhelper.Model.InputValidator;
+import com.example.sudokuhelper.Model.SolutionChecker;
+import com.example.sudokuhelper.Model.StyleManager;
 import com.example.sudokuhelper.Model.SudokuModel;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -17,14 +27,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Scanner;
 
 public class SudokuController {
 
@@ -87,16 +89,8 @@ public class SudokuController {
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 String text = gridTextField[row][col].getText().trim();
-                if (text.isEmpty()) {
-                    player[row][col] = 0; // Empty cells are represented as 0
-                } else {
-                    try {
-                        player[row][col] = Integer.parseInt(text);
-                    } catch (NumberFormatException e) {
-                        // Handle invalid input gracefully, e.g. show an alert
-                        player[row][col] = 0; // Reset invalid input to 0
-                    }
-                }
+                if (InputValidator.isValidDigit(text)) player[row][col] = Integer.parseInt(text);
+                else player[row][col] = 0; // Empty or invalid cells become 0
             }
         }
         // keep model in sync
@@ -134,18 +128,16 @@ public class SudokuController {
                 TextField tf = new TextField();
                 tf.setPrefWidth(40);
                 tf.setPrefHeight(40);
-                // Use CSS classes (sudoku.css) for styling
-                tf.getStyleClass().add("cell");
+                StyleManager.markEditable(tf);
 
                 int finalRow = row;
                 int finalCol = col;
                 tf.setOnMouseClicked(e -> {
                     if (selectedTextField != null) {
-                        selectedTextField.getStyleClass().remove("cell-selected"); // Reset previous selected
+                        StyleManager.clearSelection(selectedTextField); // Reset previous selected
                     }
                     selectedTextField = tf;
-                    if (!selectedTextField.getStyleClass().contains("cell-selected"))
-                        selectedTextField.getStyleClass().add("cell-selected"); // Highlight selected
+                    StyleManager.markSelected(selectedTextField); // Highlight selected
                     // highlight row/column/box
                     highlightRelatedCells(finalRow, finalCol);
                     tf.requestFocus();
@@ -156,16 +148,17 @@ public class SudokuController {
 
                 // Add listener to validate input
                 tf.textProperty().addListener((observable, oldValue, newValue) -> {
-                    // Check if the new value is not empty and does not match digits 1-9
-                    if (!newValue.isEmpty() && !newValue.matches("[1-9]")) {
+                    if (newValue.length() > 1) {
+                        tf.setText(newValue.substring(0, 1)); // Limit input to a single digit
+                        return;
+                    }
+                    if (!newValue.isEmpty() && !InputValidator.isValidDigit(newValue)) {
                         Alert alert = new Alert(AlertType.ERROR);
                         alert.setTitle("Invalid Input");
                         alert.setHeaderText(null);
                         alert.setContentText("Please enter numbers from 1 to 9 only.");
                         alert.showAndWait();
                         tf.setText(oldValue); // Revert to the previous valid input
-                    } else if (newValue.length() > 1) {
-                        tf.setText(newValue.substring(0, 1)); // Limit input to a single digit
                     }
                 });
 
@@ -190,7 +183,7 @@ public class SudokuController {
         gridPane.setOnKeyPressed(event -> {
             if (selectedTextField != null && !selectedTextField.isDisabled()) {
                 String key = event.getText();
-                if (key.matches("[1-9]")) {
+                if (InputValidator.isValidDigit(key)) {
                     selectedTextField.setText(key); // Update text if it's a digit
                      // To disable impossible moves
                 } else if (event.getCode().toString().equals("BACK_SPACE") || event.getCode().toString().equals("DELETE")) {
@@ -335,13 +328,12 @@ public class SudokuController {
         int[][] solvedBoard = model.getPlayerGrid();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
-                gridTextField[row][col].setText(String.valueOf(solvedBoard[row][col]));
                 TextField tf = gridTextField[row][col];
-                tf.setDisable(true);
-                tf.getStyleClass().removeAll("cell", "cell-given", "cell-selected");
-                if (!tf.getStyleClass().contains("cell-solved")) tf.getStyleClass().add("cell-solved");
+                tf.setText(String.valueOf(solvedBoard[row][col]));
+                StyleManager.markSolved(tf);
             }
         }
+        selectedTextField = null;
     }
 
     /** Evaluates the player's solution and shows an alert with the result. */
@@ -354,10 +346,7 @@ public class SudokuController {
         alert.showAndWait();
     }
 
-    //Set<Integer> possible;
     List<Integer> possibleValues = new ArrayList<>();
-
-    private int[][] currentGrid;
 
 
     /** Adds tooltips with possible candidate values to empty editable cells. */
@@ -398,45 +387,6 @@ public class SudokuController {
 
     }
 
-    /**
-     * Returns the list of possible digits for the given cell using the controller's
-     * player grid. This mirrors the model's candidate logic for controller-side checks.
-     */
-    private List<Integer> getPossibleValues(int i, int j) {
-        boolean[] possible = new boolean[9];
-        int[][] board = player;
-        // Eliminate numbers in the same row
-        for (int col = 0; col < 9; col++) {
-            if (board[i][col] != 0) {
-                possible[board[i][col] - 1] = true;
-            }
-        }
-        // Eliminate numbers in the same column
-        for (int row = 0; row < 9; row++) {
-            if (board[row][j] != 0) {
-                possible[board[row][j] - 1] = true;
-            }
-        }
-
-        // Eliminate numbers in the same 3x3 subgrid
-        int boxRowStart = (i / 3) * 3;
-        int boxColStart = (j / 3) * 3;
-        for (int row = boxRowStart; row < boxRowStart + 3; row++) {
-            for (int col = boxColStart; col < boxColStart + 3; col++) {
-                if (board[row][col] != 0) {
-                    possible[board[row][col] - 1] = true;
-                }
-            }
-        }
-        List<Integer> candidates = new ArrayList<>();
-        for (int num = 0; num < 9; num++) {
-            if (!possible[num]) {
-                candidates.add(num + 1);
-            }
-        }
-        return candidates;
-    }
-
     // Helper method to convert a collection of Integers to a comma-separated String for the tooltip
     private String possibleToString(Collection<Integer> col) {
         StringBuilder sb = new StringBuilder();
@@ -451,86 +401,28 @@ public class SudokuController {
 
     // Display the Sudoku grid
     public void DisplayGrid() {
+        int[][] current = model.getCurrentGrid();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
-                int val = model.getCurrentGrid()[row][col];
+                int val = current[row][col];
                 TextField tf = gridTextField[row][col];
                 if (val != 0) {
                     tf.setText(String.valueOf(val));
-                    tf.setDisable(true);
-                    tf.getStyleClass().removeAll("cell", "cell-solved", "cell-selected");
-                    if (!tf.getStyleClass().contains("cell-given")) tf.getStyleClass().add("cell-given");
+                    StyleManager.markGiven(tf);
                 } else {
                     tf.setText("");
-                    tf.setDisable(false);
-                    tf.getStyleClass().removeAll("cell-given", "cell-solved", "cell-selected");
-                    if (!tf.getStyleClass().contains("cell")) tf.getStyleClass().add("cell");
+                    StyleManager.markEditable(tf);
                 }
+                tf.setTooltip(null);
             }
         }
+        selectedTextField = null;
     }
 
     // Check if the user's solution is correct
     public boolean CheckSolution() {
-        // update player array from UI then delegate check to model
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                String text = gridTextField[row][col].getText().trim();
-                if (text.isEmpty())
-                    return false;
-                try {
-                    player[row][col] = Integer.parseInt(text);
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-            }
-        }
-        model.setPlayerGrid(player);
-        return model.checkSolution(solution);
-    }
-
-    // Import a Sudoku grid from a file
-    public void HandleImport(File file) {
-        if (file != null) { // Added null check here
-            try (FileReader fileReader = new FileReader(file);
-                 Scanner scanner = new Scanner(fileReader)) {
-                scanner.useDelimiter(",|\s+"); // Use comma or whitespace as delimiter
-
-                for (int row = 0; row < 9; row++) {
-                    for (int col = 0; col < 9; col++) {
-                        if (scanner.hasNext()) {
-                            String value = scanner.next().trim();
-                            try {
-                                if (!value.isEmpty()) {
-                                    int val = Integer.parseInt(value);
-                                    currentGrid[row][col] = val;
-                                    player[row][col] = val;
-                                } else {
-                                    currentGrid[row][col] = 0;
-                                    player[row][col] = 0;
-                                }
-                            } catch (NumberFormatException e) {
-                                currentGrid[row][col] = 0;
-                                player[row][col] = 0;
-                            }
-                        } else {
-                            return;
-                        }
-                    }
-                    if (scanner.hasNextLine()) {
-                        scanner.nextLine();
-                    } else if (row < 8) {
-                        return;
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println("Error importing file: " + e.getMessage());
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Import Error");
-                alert.setHeaderText(null);
-                alert.setContentText("Error reading the file: " + e.getMessage());
-                alert.showAndWait();
-            }
-        }
+        updatePlayerArray();
+        if (!SolutionChecker.isComplete(player)) return false;
+        return SolutionChecker.equals(player, solution);
     }
 }
