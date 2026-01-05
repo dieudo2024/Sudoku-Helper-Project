@@ -90,6 +90,16 @@ public class SudokuModel {
     }
 
     /**
+     * Generates a new random puzzle and loads it into current and player grids.
+     * @param clues number of givens to keep (17-81)
+     */
+    public void generateRandomPuzzle(int clues) {
+        int[][] puzzle = SudokuGenerator.generate(clues);
+        setCurrentGrid(puzzle);
+        setPlayerGrid(puzzle);
+    }
+
+    /**
      * Imports a puzzle from a text or CSV file into the current and player grids.
      * @param file input file
      * @return {@code true} if the import succeeded and the grids were filled; {@code false} otherwise

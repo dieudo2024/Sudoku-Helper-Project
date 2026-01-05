@@ -25,9 +25,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -55,6 +57,8 @@ public class SudokuController {
     private Button buttonNine;
     @FXML
     private Button importButton;
+    @FXML
+    private Button generateButton;
 
     @FXML
     private GridPane gridPane;
@@ -314,6 +318,12 @@ public class SudokuController {
         handleCheckSolution();
     }
 
+    /** Generates a fresh random puzzle. */
+    @FXML
+    public void onHandleGenerateButton(ActionEvent event) {
+        handleGeneratePuzzle();
+    }
+
     /** Clears the selected cell and updates model state. */
     private void handleErase() {
         if (selectedTextField != null && !selectedTextField.isDisabled()) {
@@ -495,5 +505,49 @@ public class SudokuController {
         int[][] expected = model.getSolutionGrid();
         if (expected != null && !SolutionChecker.equals(player, expected)) return false;
         return true;
+    }
+
+    private void handleGeneratePuzzle() {
+        Alert difficultyPrompt = new Alert(AlertType.CONFIRMATION);
+        difficultyPrompt.setTitle("New Puzzle");
+        difficultyPrompt.setHeaderText("Select difficulty level");
+        difficultyPrompt.setContentText("Choose the desired clue count:");
+
+        Button easyButton = new Button("Easy (40 clues)");
+        Button mediumButton = new Button("Medium (32 clues)");
+        Button hardButton = new Button("Hard (26 clues)");
+
+        easyButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.OK);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(40);
+        });
+        mediumButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.CANCEL);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(32);
+        });
+        hardButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.CLOSE);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(26);
+        });
+
+        difficultyPrompt.getDialogPane().getButtonTypes().clear();
+        difficultyPrompt.getDialogPane().setContent(new VBox(12, easyButton, mediumButton, hardButton));
+        difficultyPrompt.showAndWait();
+    }
+
+    private void generatePuzzleWithClues(int clues) {
+        model.generateRandomPuzzle(clues);
+        DisplayGrid();
+        updatePlayerArray();
+        possibleValues.clear();
+        enableDisableNumberButtons();
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("New Puzzle Ready");
+        alert.setHeaderText(null);
+        alert.setContentText("A new Sudoku puzzle has been generated.");
+        alert.showAndWait();
     }
 }
