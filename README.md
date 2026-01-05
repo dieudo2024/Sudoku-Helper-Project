@@ -65,7 +65,7 @@ Fork, create a feature branch, add tests for new behavior, and open a pull reque
 
 ## License
 
-Include your preferred license here.
+Coming soon!
 
 ---
 
