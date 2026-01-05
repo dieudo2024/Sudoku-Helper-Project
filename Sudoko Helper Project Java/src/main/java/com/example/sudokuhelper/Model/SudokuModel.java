@@ -12,6 +12,8 @@ public class SudokuModel {
 
     private final int[][] currentGrid = new int[9][9];
     private final int[][] player = new int[9][9];
+    private final int[][] solution = new int[9][9];
+    private boolean solutionAvailable = false;
 
     /**
      * Returns a defensive copy of the current grid (the given puzzle).
@@ -43,6 +45,15 @@ public class SudokuModel {
      */
     public void setCurrentGrid(int[][] src) {
         SudokuBoard.copyInto(src, currentGrid);
+        refreshSolution();
+    }
+
+    /**
+     * Returns a defensive copy of the solved grid when available.
+     * @return solved 9x9 matrix, or {@code null} if no solution was computed
+     */
+    public int[][] getSolutionGrid() {
+        return solutionAvailable ? SudokuBoard.deepCopy(solution) : null;
     }
 
     /**
@@ -50,8 +61,12 @@ public class SudokuModel {
      * @return {@code true} if the grid was solved; {@code false} otherwise
      */
     public boolean solve() {
-        // solve player grid in-place (treat empty cells as 0)
-        return SudokuSolver.solve(player);
+        boolean solved = SudokuSolver.solve(player);
+        if (solved) {
+            SudokuBoard.copyInto(player, solution);
+            solutionAvailable = true;
+        }
+        return solved;
     }
 
     /**
@@ -93,6 +108,19 @@ public class SudokuModel {
             }
         }
         return cells;
+    }
+
+    /**
+     * Recomputes the solved grid from the current givens.
+     */
+    private void refreshSolution() {
+        int[][] snapshot = SudokuBoard.deepCopy(currentGrid);
+        if (SudokuSolver.solve(snapshot)) {
+            SudokuBoard.copyInto(snapshot, solution);
+            solutionAvailable = true;
+        } else {
+            solutionAvailable = false;
+        }
     }
 
 }

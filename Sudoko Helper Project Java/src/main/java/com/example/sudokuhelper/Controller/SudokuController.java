@@ -61,18 +61,6 @@ public class SudokuController {
 
     private final int[][] player = new int[9][9];
 
-    private final int[][] solution = {
-            { 7, 9, 2, 3, 5, 1, 8, 6, 4 },
-            { 3, 8, 1, 4, 6, 9, 5, 2, 7 },
-            { 4, 5, 9, 2, 8, 7, 1, 6, 3 },
-            { 1, 4, 5, 6, 9, 2, 7, 3, 8 },
-            { 6, 7, 8, 5, 1, 3, 2, 4, 9 },
-            { 2, 3, 9, 8, 7, 4, 6, 5, 1 },
-            { 5, 1, 7, 9, 2, 6, 3, 8, 4 },
-            { 9, 6, 3, 1, 4, 8, 2, 7, 5 },
-            { 8, 2, 4, 7, 3, 5, 9, 1, 6 }
-    };
-
     /**
      * JavaFX initialization hook. Builds the 9x9 TextField grid, attaches listeners
      * and configures keyboard handling.
@@ -458,6 +446,8 @@ public class SudokuController {
     public boolean CheckSolution() {
         updatePlayerArray();
         if (!SolutionChecker.isComplete(player)) return false;
-        return SolutionChecker.equals(player, solution);
+        int[][] expected = model.getSolutionGrid();
+        if (expected != null && !SolutionChecker.equals(player, expected)) return false;
+        return true;
     }
 }
