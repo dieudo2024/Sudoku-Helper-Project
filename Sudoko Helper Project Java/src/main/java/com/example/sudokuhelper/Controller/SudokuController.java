@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.example.sudokuhelper.Model.GridCell;
+import com.example.sudokuhelper.Model.Hint;
 import com.example.sudokuhelper.Model.InputValidator;
 import com.example.sudokuhelper.Model.SolutionChecker;
 import com.example.sudokuhelper.Model.StyleManager;
@@ -23,9 +25,11 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -53,6 +57,8 @@ public class SudokuController {
     private Button buttonNine;
     @FXML
     private Button importButton;
+    @FXML
+    private Button generateButton;
 
     @FXML
     private GridPane gridPane;
@@ -60,18 +66,6 @@ public class SudokuController {
     private final TextField[][] gridTextField = new TextField[9][9];
 
     private final int[][] player = new int[9][9];
-
-    private final int[][] solution = {
-            { 7, 9, 2, 3, 5, 1, 8, 6, 4 },
-            { 3, 8, 1, 4, 6, 9, 5, 2, 7 },
-            { 4, 5, 9, 2, 8, 7, 1, 6, 3 },
-            { 1, 4, 5, 6, 9, 2, 7, 3, 8 },
-            { 6, 7, 8, 5, 1, 3, 2, 4, 9 },
-            { 2, 3, 9, 8, 7, 4, 6, 5, 1 },
-            { 5, 1, 7, 9, 2, 6, 3, 8, 4 },
-            { 9, 6, 3, 1, 4, 8, 2, 7, 5 },
-            { 8, 2, 4, 7, 3, 5, 9, 1, 6 }
-    };
 
     /**
      * JavaFX initialization hook. Builds the 9x9 TextField grid, attaches listeners
@@ -324,6 +318,12 @@ public class SudokuController {
         handleCheckSolution();
     }
 
+    /** Generates a fresh random puzzle. */
+    @FXML
+    public void onHandleGenerateButton(ActionEvent event) {
+        handleGeneratePuzzle();
+    }
+
     /** Clears the selected cell and updates model state. */
     private void handleErase() {
         if (selectedTextField != null && !selectedTextField.isDisabled()) {
@@ -383,20 +383,64 @@ public class SudokuController {
 
     /** Adds tooltips with possible candidate values to empty editable cells. */
     private void handleAnalyze() {
+        updatePlayerArray();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 if (gridTextField[row][col].isDisabled())
                     continue;
                 if (gridTextField[row][col].getText().trim().isEmpty()) {
                     // delegate possible-values to model
-                    possibleValues = model.getPossibleValues(row, col);
-                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString(possibleValues)));
+                    List<Integer> candidates = model.getPossibleValues(row, col);
+                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString(candidates)));
                 } else {
                     gridTextField[row][col].setTooltip(null);
                 }
             }
         }
+            if (selectedTextField != null && !selectedTextField.isDisabled()) {
+                for (int row = 0; row < 9; row++) {
+                    for (int col = 0; col < 9; col++) {
+                        if (gridTextField[row][col] == selectedTextField) {
+                            possibleValues = model.getPossibleValues(row, col);
+                            enableDisableNumberButtons();
+                            showAnalyzeConfirmation();
+                            return;
+                        }
+                    }
+                }
+            }
+            possibleValues = new ArrayList<>();
+            enableDisableNumberButtons();
+            showAnalyzeConfirmation();
     }
+
+        private void showAnalyzeConfirmation() {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Analyze Complete");
+            alert.setHeaderText("Candidate hints refreshed");
+
+            StringBuilder message = new StringBuilder("Candidate hints have been updated.");
+            Optional<Hint> hintOpt = model.computeHint();
+            if (hintOpt.isPresent()) {
+                Hint hint = hintOpt.get();
+                message.append("\n\nSuggested move: ").append(hint.getExplanation());
+                highlightHintCell(hint);
+            } else {
+                message.append("\n\nNo additional logical hint is available right now.");
+            }
+
+            alert.setContentText(message.toString());
+            alert.showAndWait();
+        }
+
+        private void highlightHintCell(Hint hint) {
+            int row = hint.getRow();
+            int col = hint.getCol();
+            if (row < 0 || row >= 9 || col < 0 || col >= 9) return;
+            TextField tf = gridTextField[row][col];
+            selectCell(tf, row, col);
+            tf.requestFocus();
+        }
 
     /** Enables or disables the numeric entry buttons based on the current candidates. */
     private void enableDisableNumberButtons() {
@@ -458,6 +502,52 @@ public class SudokuController {
     public boolean CheckSolution() {
         updatePlayerArray();
         if (!SolutionChecker.isComplete(player)) return false;
-        return SolutionChecker.equals(player, solution);
+        int[][] expected = model.getSolutionGrid();
+        if (expected != null && !SolutionChecker.equals(player, expected)) return false;
+        return true;
+    }
+
+    private void handleGeneratePuzzle() {
+        Alert difficultyPrompt = new Alert(AlertType.CONFIRMATION);
+        difficultyPrompt.setTitle("New Puzzle");
+        difficultyPrompt.setHeaderText("Select difficulty level");
+        difficultyPrompt.setContentText("Choose the desired clue count:");
+
+        Button easyButton = new Button("Easy (40 clues)");
+        Button mediumButton = new Button("Medium (32 clues)");
+        Button hardButton = new Button("Hard (26 clues)");
+
+        easyButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.OK);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(40);
+        });
+        mediumButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.CANCEL);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(32);
+        });
+        hardButton.setOnAction(e -> {
+            difficultyPrompt.setResult(ButtonType.CLOSE);
+            difficultyPrompt.close();
+            generatePuzzleWithClues(26);
+        });
+
+        difficultyPrompt.getDialogPane().getButtonTypes().clear();
+        difficultyPrompt.getDialogPane().setContent(new VBox(12, easyButton, mediumButton, hardButton));
+        difficultyPrompt.showAndWait();
+    }
+
+    private void generatePuzzleWithClues(int clues) {
+        model.generateRandomPuzzle(clues);
+        DisplayGrid();
+        updatePlayerArray();
+        possibleValues.clear();
+        enableDisableNumberButtons();
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("New Puzzle Ready");
+        alert.setHeaderText(null);
+        alert.setContentText("A new Sudoku puzzle has been generated.");
+        alert.showAndWait();
     }
 }

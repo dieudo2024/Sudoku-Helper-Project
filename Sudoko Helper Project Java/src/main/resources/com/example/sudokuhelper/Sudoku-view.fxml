@@ -47,7 +47,8 @@
         <Button fx:id="eraseButton" layoutX="93.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleEraseButtonClick" text="Erase" />
         <Button fx:id="solveButton" layoutX="192.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleSolveButton" text="Solve" />
         <Button fx:id="analyzeButton" layoutX="274.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleAnalyzeButton" text="Analyze" />
-        <Button fx:id="importButton" layoutX="364.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleImportButton" text="Import" />
-        <Button fx:id="checkSolutionButton" layoutX="461.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleCheckSolutionButton" text="Check Solution" />
+        <Button fx:id="importButton" layoutX="354.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleImportButton" text="Import" />
+        <Button fx:id="generateButton" layoutX="440.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleGenerateButton" text="Generate" />
+        <Button fx:id="checkSolutionButton" layoutX="540.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleCheckSolutionButton" text="Check Solution" />
     </children>
 </Pane>

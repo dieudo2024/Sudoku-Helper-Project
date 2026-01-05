@@ -3,6 +3,7 @@ package com.example.sudokuhelper.Model;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Model class that holds the current and player Sudoku grids and provides
@@ -12,6 +13,8 @@ public class SudokuModel {
 
     private final int[][] currentGrid = new int[9][9];
     private final int[][] player = new int[9][9];
+    private final int[][] solution = new int[9][9];
+    private boolean solutionAvailable = false;
 
     /**
      * Returns a defensive copy of the current grid (the given puzzle).
@@ -43,6 +46,15 @@ public class SudokuModel {
      */
     public void setCurrentGrid(int[][] src) {
         SudokuBoard.copyInto(src, currentGrid);
+        refreshSolution();
+    }
+
+    /**
+     * Returns a defensive copy of the solved grid when available.
+     * @return solved 9x9 matrix, or {@code null} if no solution was computed
+     */
+    public int[][] getSolutionGrid() {
+        return solutionAvailable ? SudokuBoard.deepCopy(solution) : null;
     }
 
     /**
@@ -50,8 +62,12 @@ public class SudokuModel {
      * @return {@code true} if the grid was solved; {@code false} otherwise
      */
     public boolean solve() {
-        // solve player grid in-place (treat empty cells as 0)
-        return SudokuSolver.solve(player);
+        boolean solved = SudokuSolver.solve(player);
+        if (solved) {
+            SudokuBoard.copyInto(player, solution);
+            solutionAvailable = true;
+        }
+        return solved;
     }
 
     /**
@@ -63,6 +79,24 @@ public class SudokuModel {
      */
     public List<Integer> getPossibleValues(int row, int col) {
         return CandidateAnalyzer.analyze(player, row, col);
+    }
+
+    /**
+     * Finds a human-style hint for the current player grid.
+     * @return optional hint describing the next logical move
+     */
+    public Optional<Hint> computeHint() {
+        return HintGenerator.findHint(player);
+    }
+
+    /**
+     * Generates a new random puzzle and loads it into current and player grids.
+     * @param clues number of givens to keep (17-81)
+     */
+    public void generateRandomPuzzle(int clues) {
+        int[][] puzzle = SudokuGenerator.generate(clues);
+        setCurrentGrid(puzzle);
+        setPlayerGrid(puzzle);
     }
 
     /**
@@ -93,6 +127,19 @@ public class SudokuModel {
             }
         }
         return cells;
+    }
+
+    /**
+     * Recomputes the solved grid from the current givens.
+     */
+    private void refreshSolution() {
+        int[][] snapshot = SudokuBoard.deepCopy(currentGrid);
+        if (SudokuSolver.solve(snapshot)) {
+            SudokuBoard.copyInto(snapshot, solution);
+            solutionAvailable = true;
+        } else {
+            solutionAvailable = false;
+        }
     }
 
 }
