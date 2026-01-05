@@ -114,6 +114,47 @@ public class SudokuModel {
     }
 
     /**
+     * Exports the current puzzle (givens) to the provided file.
+     * @param file destination file
+     * @throws IOException when writing fails
+     */
+    public void exportCurrentGrid(File file) throws IOException {
+        FileExporter.exportGrid(currentGrid, file);
+    }
+
+    /**
+     * Exports the player's current progress to the provided file.
+     * @param file destination file
+     * @throws IOException when writing fails
+     */
+    public void exportPlayerGrid(File file) throws IOException {
+        FileExporter.exportGrid(player, file);
+    }
+
+    /**
+     * Saves the session (current puzzle and player entries) to disk.
+     * @param file destination file
+     * @throws IOException when writing fails
+     */
+    public void saveSession(File file) throws IOException {
+        SessionManager.saveSession(file, currentGrid, player);
+    }
+
+    /**
+     * Loads a session file and applies it to the model.
+     * @param file session file containing current puzzle and player entries
+     * @return {@code true} if the session was loaded successfully
+     * @throws IOException when reading fails
+     */
+    public boolean loadSession(File file) throws IOException {
+        if (file == null) return false;
+        SessionData data = SessionManager.loadSession(file);
+        setCurrentGrid(data.getCurrent());
+        setPlayerGrid(data.getPlayer());
+        return true;
+    }
+
+    /**
      * Provides a snapshot of the player grid paired with given flags from the original puzzle.
      * @return 9x9 array describing each cell's value and whether it is a fixed clue
      */
