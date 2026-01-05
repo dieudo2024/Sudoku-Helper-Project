@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.example.sudokuhelper.Model.GridCell;
+import com.example.sudokuhelper.Model.Hint;
 import com.example.sudokuhelper.Model.InputValidator;
 import com.example.sudokuhelper.Model.SolutionChecker;
 import com.example.sudokuhelper.Model.StyleManager;
@@ -371,6 +373,7 @@ public class SudokuController {
 
     /** Adds tooltips with possible candidate values to empty editable cells. */
     private void handleAnalyze() {
+        updatePlayerArray();
         for (int row = 0; row < 9; row++) {
             for (int col = 0; col < 9; col++) {
                 if (gridTextField[row][col].isDisabled())
@@ -404,9 +407,29 @@ public class SudokuController {
         private void showAnalyzeConfirmation() {
             Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("Analyze Complete");
-            alert.setHeaderText(null);
-            alert.setContentText("Candidate hints have been updated.");
+            alert.setHeaderText("Candidate hints refreshed");
+
+            StringBuilder message = new StringBuilder("Candidate hints have been updated.");
+            Optional<Hint> hintOpt = model.computeHint();
+            if (hintOpt.isPresent()) {
+                Hint hint = hintOpt.get();
+                message.append("\n\nSuggested move: ").append(hint.getExplanation());
+                highlightHintCell(hint);
+            } else {
+                message.append("\n\nNo additional logical hint is available right now.");
+            }
+
+            alert.setContentText(message.toString());
             alert.showAndWait();
+        }
+
+        private void highlightHintCell(Hint hint) {
+            int row = hint.getRow();
+            int col = hint.getCol();
+            if (row < 0 || row >= 9 || col < 0 || col >= 9) return;
+            TextField tf = gridTextField[row][col];
+            selectCell(tf, row, col);
+            tf.requestFocus();
         }
 
     /** Enables or disables the numeric entry buttons based on the current candidates. */

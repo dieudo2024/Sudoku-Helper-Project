@@ -3,6 +3,7 @@ package com.example.sudokuhelper.Model;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Model class that holds the current and player Sudoku grids and provides
@@ -78,6 +79,14 @@ public class SudokuModel {
      */
     public List<Integer> getPossibleValues(int row, int col) {
         return CandidateAnalyzer.analyze(player, row, col);
+    }
+
+    /**
+     * Finds a human-style hint for the current player grid.
+     * @return optional hint describing the next logical move
+     */
+    public Optional<Hint> computeHint() {
+        return HintGenerator.findHint(player);
     }
 
     /**
