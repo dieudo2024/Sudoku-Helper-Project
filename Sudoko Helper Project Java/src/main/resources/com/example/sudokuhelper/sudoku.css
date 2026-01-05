@@ -1,31 +1,96 @@
 .sudoku-grid {
-    -fx-border-color: black;
-    -fx-border-width: 2px;
+    -fx-border-color: #1f3a5f;
+    -fx-border-width: 3px;
+    -fx-border-radius: 12px;
+    -fx-background-color: linear-gradient(to bottom, #f7f9fc, #e3ebf7);
+    -fx-background-radius: 12px;
+    -fx-padding: 18px;
+    -fx-hgap: 0;
+    -fx-vgap: 0;
+    -fx-effect: dropshadow(gaussian, rgba(17, 31, 54, 0.18), 20, 0.15, 0, 4);
 }
 
-/* Individual cell styling (TextField cells) */
-.cell {
+/* Shared cell styling for editable, given, and solved states */
+.cell,
+.cell-given,
+.cell-solved {
     -fx-alignment: center;
-    -fx-font-size: 16px;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 18px;
+    -fx-text-fill: #1b2733;
+    -fx-border-color: #c1ccde;
+    -fx-border-width: 1px;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #f3f6fb);
+    -fx-background-insets: 0;
+    -fx-background-radius: 4px;
+    -fx-padding: 0;
 }
+
+.cell:hover { -fx-background-color: linear-gradient(to bottom, #f9fbff, #e9f0ff); }
+
+.cell.box-border-top,
+.cell-given.box-border-top,
+.cell-solved.box-border-top { -fx-border-color: #1f3a5f #c1ccde #c1ccde #c1ccde; -fx-border-width: 3px 1px 1px 1px; }
+.cell.box-border-bottom,
+.cell-given.box-border-bottom,
+.cell-solved.box-border-bottom { -fx-border-color: #c1ccde #c1ccde #1f3a5f #c1ccde; -fx-border-width: 1px 1px 3px 1px; }
+.cell.box-border-left,
+.cell-given.box-border-left,
+.cell-solved.box-border-left { -fx-border-color: #c1ccde #c1ccde #c1ccde #1f3a5f; -fx-border-width: 1px 1px 1px 3px; }
+.cell.box-border-right,
+.cell-given.box-border-right,
+.cell-solved.box-border-right { -fx-border-color: #c1ccde #1f3a5f #c1ccde #c1ccde; -fx-border-width: 1px 3px 1px 1px; }
+
+.cell.box-border-top.box-border-left,
+.cell-given.box-border-top.box-border-left,
+.cell-solved.box-border-top.box-border-left { -fx-border-color: #1f3a5f #c1ccde #c1ccde #1f3a5f; -fx-border-width: 3px 1px 1px 3px; }
+.cell.box-border-top.box-border-right,
+.cell-given.box-border-top.box-border-right,
+.cell-solved.box-border-top.box-border-right { -fx-border-color: #1f3a5f #1f3a5f #c1ccde #c1ccde; -fx-border-width: 3px 3px 1px 1px; }
+.cell.box-border-bottom.box-border-left,
+.cell-given.box-border-bottom.box-border-left,
+.cell-solved.box-border-bottom.box-border-left { -fx-border-color: #c1ccde #c1ccde #1f3a5f #1f3a5f; -fx-border-width: 1px 1px 3px 3px; }
+.cell.box-border-bottom.box-border-right,
+.cell-given.box-border-bottom.box-border-right,
+.cell-solved.box-border-bottom.box-border-right { -fx-border-color: #c1ccde #1f3a5f #1f3a5f #c1ccde; -fx-border-width: 1px 3px 3px 1px; }
 
 /* Selected and highlighted states */
 .cell-selected {
-    -fx-background-color: -fx-focus-color, -fx-control-inner-background;
+    -fx-background-color: linear-gradient(to bottom, #dbe9ff, #b8d4ff);
+    -fx-border-color: #2f75d3;
+    -fx-border-width: 2px;
+    -fx-font-weight: bold;
 }
-.cell-highlight {
-    -fx-background-color: #f0f8ff; /* light highlight */
-}
+.cell-highlight { -fx-background-color: rgba(47, 117, 211, 0.18); }
 
 /* Given cells (imported puzzle) and solved cells */
 .cell-given {
     -fx-font-weight: bold;
-    -fx-opacity: 0.9;
+    -fx-text-fill: #1f3a5f;
+    -fx-background-color: linear-gradient(to bottom, #edf3ff, #d8e5ff);
 }
+
 .cell-solved {
-    -fx-text-fill: green;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1f6a3a;
+    -fx-background-color: linear-gradient(to bottom, #e9f8ef, #d5f2e1);
 }
 
 /* Numeric buttons styling */
-.num-button { -fx-font-size: 14px; }
-.invalid-number { -fx-opacity: 0.4; }
+.num-button, * {
+    -fx-font-size: 15px;
+    -fx-font-family: "Segoe UI";
+    -fx-font-weight: 600;
+    -fx-text-fill: #1f3a5f;
+    -fx-background-color: linear-gradient(to bottom, #ffffff, #e4ebf8);
+    -fx-border-color: #b3c5e6;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 6 10 6 10;
+}
+
+.num-button:hover { -fx-background-color: linear-gradient(to bottom, #f8fbff, #d8e5ff); }
+.num-button:pressed { -fx-background-color: linear-gradient(to bottom, #d8e5ff, #b9ccf0); }
+
+.invalid-number { -fx-opacity: 0.35; }

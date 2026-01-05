@@ -81,7 +81,7 @@ public class SudokuController {
     private void initialize() {
         buildGrid();
         configureGridPane();
-        styleNumberButtons();
+        styleButtons();
         DisplayGrid();
         updatePlayerArray();
         possibleValues.clear();
@@ -197,7 +197,7 @@ public class SudokuController {
         });
     }
 
-    private void styleNumberButtons() {
+    private void styleButtons() {
         Button[] numButtons = {buttonOne, buttonTwo, buttonThree, buttonFour, buttonFive, buttonSix, buttonSeven, buttonEight, buttonNine};
         for (Button button : numButtons) {
             if (button == null) continue;
