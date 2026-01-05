@@ -44,11 +44,14 @@
 
         </GridPane>
 
-        <Button fx:id="eraseButton" layoutX="93.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleEraseButtonClick" text="Erase" />
-        <Button fx:id="solveButton" layoutX="192.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleSolveButton" text="Solve" />
-        <Button fx:id="analyzeButton" layoutX="274.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleAnalyzeButton" text="Analyze" />
-        <Button fx:id="importButton" layoutX="354.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleImportButton" text="Import" />
-        <Button fx:id="generateButton" layoutX="440.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleGenerateButton" text="Generate" />
-        <Button fx:id="checkSolutionButton" layoutX="540.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleCheckSolutionButton" text="Check Solution" />
+        <Button fx:id="eraseButton" layoutX="70.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleEraseButtonClick" prefWidth="70.0" text="Erase" />
+        <Button fx:id="solveButton" layoutX="150.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleSolveButton" prefWidth="70.0" text="Solve" />
+        <Button fx:id="analyzeButton" layoutX="230.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleAnalyzeButton" prefWidth="70.0" text="Analyze" />
+        <Button fx:id="importButton" layoutX="310.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleImportButton" prefWidth="70.0" text="Import" />
+        <Button fx:id="exportPuzzleButton" layoutX="390.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleExportPuzzle" prefWidth="70.0" text="Export" />
+        <Button fx:id="saveProgressButton" layoutX="470.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleSaveProgress" prefWidth="70.0" text="Save" />
+        <Button fx:id="loadProgressButton" layoutX="550.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleLoadProgress" prefWidth="70.0" text="Load" />
+        <Button fx:id="generateButton" layoutX="630.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleGenerateButton" prefWidth="70.0" text="Generate" />
+        <Button fx:id="checkSolutionButton" layoutX="710.0" layoutY="508.0" mnemonicParsing="false" onAction="#onHandleCheckSolutionButton" prefWidth="90.0" text="Check" />
     </children>
 </Pane>

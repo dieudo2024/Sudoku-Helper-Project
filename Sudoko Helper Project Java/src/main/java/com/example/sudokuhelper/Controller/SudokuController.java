@@ -59,6 +59,12 @@ public class SudokuController {
     private Button importButton;
     @FXML
     private Button generateButton;
+    @FXML
+    private Button exportPuzzleButton;
+    @FXML
+    private Button saveProgressButton;
+    @FXML
+    private Button loadProgressButton;
 
     @FXML
     private GridPane gridPane;
@@ -324,6 +330,21 @@ public class SudokuController {
         handleGeneratePuzzle();
     }
 
+    @FXML
+    public void onHandleExportPuzzle(ActionEvent event) {
+        handleExportPuzzle();
+    }
+
+    @FXML
+    public void onHandleSaveProgress(ActionEvent event) {
+        handleSaveProgress();
+    }
+
+    @FXML
+    public void onHandleLoadProgress(ActionEvent event) {
+        handleLoadProgress();
+    }
+
     /** Clears the selected cell and updates model state. */
     private void handleErase() {
         if (selectedTextField != null && !selectedTextField.isDisabled()) {
@@ -548,6 +569,80 @@ public class SudokuController {
         alert.setTitle("New Puzzle Ready");
         alert.setHeaderText(null);
         alert.setContentText("A new Sudoku puzzle has been generated.");
+        alert.showAndWait();
+    }
+
+    private void handleExportPuzzle() {
+        FileChooser fileChooser = createFileChooser("Export Puzzle", "Sudoku Files", "*.csv", "*.txt");
+        File target = fileChooser.showSaveDialog(getStage());
+        if (target == null) return;
+        try {
+            model.exportCurrentGrid(target);
+            showInfo("Export Successful", "The puzzle was exported to " + target.getName() + ".");
+        } catch (IOException ex) {
+            showError("Export Failed", "Unable to export puzzle: " + ex.getMessage());
+        }
+    }
+
+    private void handleSaveProgress() {
+        FileChooser fileChooser = createFileChooser("Save Progress", "Session Files", "*.sudses");
+        File target = fileChooser.showSaveDialog(getStage());
+        if (target == null) return;
+        try {
+            updatePlayerArray();
+            model.saveSession(target);
+            showInfo("Progress Saved", "Your current session was saved to " + target.getName() + ".");
+        } catch (IOException ex) {
+            showError("Save Failed", "Unable to save session: " + ex.getMessage());
+        }
+    }
+
+    private void handleLoadProgress() {
+        FileChooser fileChooser = createFileChooser("Load Progress", "Session Files", "*.sudses");
+        File source = fileChooser.showOpenDialog(getStage());
+        if (source == null) return;
+        try {
+            boolean ok = model.loadSession(source);
+            if (ok) {
+                DisplayGrid();
+                updatePlayerArray();
+                possibleValues.clear();
+                enableDisableNumberButtons();
+                showInfo("Session Loaded", "Your saved session has been restored.");
+            } else {
+                showError("Load Failed", "The selected file could not be loaded.");
+            }
+        } catch (IOException ex) {
+            showError("Load Failed", "Unable to load session: " + ex.getMessage());
+        }
+    }
+
+    private FileChooser createFileChooser(String title, String description, String... extensions) {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle(title);
+        if (extensions != null && extensions.length > 0) {
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(description, extensions));
+        }
+        return chooser;
+    }
+
+    private Stage getStage() {
+        return (Stage) gridPane.getScene().getWindow();
+    }
+
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }
