@@ -377,14 +377,37 @@ public class SudokuController {
                     continue;
                 if (gridTextField[row][col].getText().trim().isEmpty()) {
                     // delegate possible-values to model
-                    possibleValues = model.getPossibleValues(row, col);
-                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString(possibleValues)));
+                    List<Integer> candidates = model.getPossibleValues(row, col);
+                    gridTextField[row][col].setTooltip(new Tooltip("Possible: " + possibleToString(candidates)));
                 } else {
                     gridTextField[row][col].setTooltip(null);
                 }
             }
         }
+            if (selectedTextField != null && !selectedTextField.isDisabled()) {
+                for (int row = 0; row < 9; row++) {
+                    for (int col = 0; col < 9; col++) {
+                        if (gridTextField[row][col] == selectedTextField) {
+                            possibleValues = model.getPossibleValues(row, col);
+                            enableDisableNumberButtons();
+                            showAnalyzeConfirmation();
+                            return;
+                        }
+                    }
+                }
+            }
+            possibleValues = new ArrayList<>();
+            enableDisableNumberButtons();
+            showAnalyzeConfirmation();
     }
+
+        private void showAnalyzeConfirmation() {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Analyze Complete");
+            alert.setHeaderText(null);
+            alert.setContentText("Candidate hints have been updated.");
+            alert.showAndWait();
+        }
 
     /** Enables or disables the numeric entry buttons based on the current candidates. */
     private void enableDisableNumberButtons() {
